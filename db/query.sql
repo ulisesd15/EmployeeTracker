@@ -1,11 +1,5 @@
-SELECT position.position_name AS position, department.dep_name
-FROM position
-LEFT JOIN department
-ON position.dep_id = department.id
-ORDER BY department.dep_name;
-
-SELECT employee.employee_name AS employee, position.position_name, department.dep_name
-FROM employee
-LEFT JOIN position
-ON employee.position_id = position.id
-ORDER BY position.position_name;
+SELECT department.id AS department_id 
+FROM department 
+LEFT JOIN roles ON department.id = roles.department_id 
+LEFT JOIN employee ON roles.id = employee.role_id 
+WHERE employee.manager_id = 1;
