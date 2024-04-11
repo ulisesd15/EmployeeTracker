@@ -16,17 +16,17 @@ const db = mysql.createConnection(
     // MySQL username,
     user: 'root',
     // TODO: Add MySQL password here
-    password: '',
-    database: 'movies_db'
+    password: 'Eldivino404@',
+    database: 'staff_db'
   },
-  console.log(`Connected to the movies_db database.`)
+  console.log(`Connected to the staff_db database.`)
 );
 
-// Create a movie
-app.post('/api/new-movie', ({ body }, res) => {
-  const sql = `INSERT INTO movies (movie_name)
+// Create an employee
+app.post('/api/employee', ({ body }, res) => {
+  const sql = `INSERT INTO department (dep_name)
     VALUES (?)`;
-  const params = [body.movie_name];
+  const params = [body.first_name];
   
   db.query(sql, params, (err, result) => {
     if (err) {
@@ -41,8 +41,8 @@ app.post('/api/new-movie', ({ body }, res) => {
 });
 
 // Read all movies
-app.get('/api/movies', (req, res) => {
-  const sql = `SELECT id, movie_name AS title FROM movies`;
+app.get('/api/employee', (req, res) => {
+  const sql = `SELECT id, position_name AS id FROM position`;
   
   db.query(sql, (err, rows) => {
     if (err) {
@@ -57,8 +57,8 @@ app.get('/api/movies', (req, res) => {
 });
 
 // Delete a movie
-app.delete('/api/movie/:id', (req, res) => {
-  const sql = `DELETE FROM movies WHERE id = ?`;
+app.delete('/api/employee/:id', (req, res) => {
+  const sql = `DELETE FROM employee WHERE id = ?`;
   const params = [req.params.id];
   
   db.query(sql, params, (err, result) => {
