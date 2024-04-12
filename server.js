@@ -10,7 +10,6 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-
 // Connect to database
 const db = mysql.createConnection(
   {
@@ -24,40 +23,6 @@ const db = mysql.createConnection(
   console.log(`Connected to the staff_db database.`)
 );
 
-// initial prompt
-const init = () => {
-  promptUser().then((data) => {
-    switch (data.action) {
-      case 'View all employees':
-        viewEmployees();
-        break;
-      case 'Add employee':
-        addEmployee();
-        break;
-      case 'Update employee role':
-        updateEmployeeRole();
-        break;
-      case 'Update employee manager':
-        updateEmployeeManager();
-        break;
-      case 'View all roles':
-        viewRoles();
-        break;
-      case 'Add role':
-        addRole();
-        break;
-      case 'View all departments':
-        viewDepartments();
-        break;
-      case 'Add department':
-        addDepartment();
-        break;
-    
-    }
-  });
-};
-
-init();
 // Prompt the user for what they would like to do
 const promptUser = () => {
   return inquirer.prompt([
@@ -75,21 +40,64 @@ const promptUser = () => {
         'Add department',
       ],
     }
-  ])
-}
+  ]);
+};
 
-// View all employees
+// initial prompt
+const init = () => {
+  promptUser().then((data) => {
+    switch (data.action) {
+      case 'View all employees':
+        viewEmployees();
+        break;
+      case 'Add employee':
+        addEmployee();
+        break;
+      case 'Update employee role':
+        updateEmployeeRole();
+        break;
+      // case 'Update employee manager':
+      //   updateEmployeeManager();
+      //   break;
+      case 'View all roles':
+        viewRoles();
+        break;
+      case 'Add role':
+        addRole();
+        break;
+      case 'View all departments':
+        viewDepartments();
+        break;
+      case 'Add department':
+        addDepartment();
+        break;
+    }
+  });
+};
+
+init();
+
 const viewEmployees = () => {
-  const sql = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.dep_name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id;`;
+  const sql = `
+    SELECT
+      employee.id,
+      employee.first_name,
+      employee.last_name,
+      roles.role_name
+    FROM employee
+    LEFT JOIN roles ON employee.role_id = roles.id;
+  `;
+
   db.query(sql, (err, rows) => {
     if (err) {
       console.log(err);
       return;
     }
     console.table(rows);
-    init();
   });
 };
+// Call the app
+
 
 // Add an employee
 const addEmployee = () => {
@@ -108,16 +116,11 @@ const addEmployee = () => {
       type: 'input',
       name: 'role_id',
       message: 'Enter employee role ID:',
-    },
-    {
-      type: 'input',
-      name: 'manager_id',
-      message: 'Enter employee manager ID:',
-    },
+    }
   ])
     .then((data) => {
-      const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-      const params = [data.first_name, data.last_name, data.role_id, data.manager_id];
+      const sql = `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`;
+      const params = [data.first_name, data.last_name, data.role_id];
       db.query(sql, params, (err, result) => {
         if (err) {
           console.log(err);
@@ -134,7 +137,7 @@ const updateEmployeeRole = () => {
   inquirer.prompt([
     {
       type: 'input',
-      name: 'employee_id',
+      name: 'id',
       message: 'Enter employee ID:',
     },
     {
@@ -145,7 +148,7 @@ const updateEmployeeRole = () => {
   ])
     .then((data) => {
       const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
-      const params = [data.role_id, data.employee_id];
+      const params = [data.role_id, data.id];
       db.query(sql, params, (err, result) => {
         if (err) {
           console.log(err);
@@ -159,7 +162,11 @@ const updateEmployeeRole = () => {
 
 // view all roles
 const viewRoles = () => {
-  const sql = `SELECT role.id, role.title, role.salary, department.dep_name AS department FROM role LEFT JOIN department ON role.department_id = department.id;`;
+  const sql = `SELECT
+  roles.id,
+  roles.role_name, 
+  department.dep_name FROM roles 
+  LEFT JOIN department ON roles.department_id = department.id;`;
   db.query(sql, (err, rows) => {
     if (err) {
       console.log(err);
@@ -175,13 +182,8 @@ const addRole = () => {
   inquirer.prompt([
     {
       type: 'input',
-      name: 'title',
+      name: 'role_name',
       message: 'Enter role title:',
-    },
-    {
-      type: 'input',
-      name: 'salary',
-      message: 'Enter role salary:',
     },
     {
       type: 'input',
@@ -190,8 +192,8 @@ const addRole = () => {
     },
   ])
     .then((data) => {
-      const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
-      const params = [data.title, data.salary, data.department_id];
+      const sql = `INSERT INTO roles (role_name, department_id) VALUES (?, ?)`;
+      const params = [data.role_name, data.department_id];
       db.query(sql, params, (err, result) => {
         if (err) {
           console.log(err);
